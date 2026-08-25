@@ -352,3 +352,14 @@ export const sessionCancelRequestSchema = z.object({
 export const sessionCancelValueSchema = z.object({
   accepted: z.literal(true),
 }) satisfies z.ZodType<Wire<ResponseValue<'session.cancel'>>>
+
+/** session.setPermission request payload. */
+export const sessionSetPermissionRequestSchema = z.object({
+  sessionId: sessionIdSchema,
+  preset: z.string().min(1),
+}) satisfies z.ZodType<Wire<RequestPayload<'session.setPermission'>>>
+
+/** session.setPermission response value. */
+export const sessionSetPermissionValueSchema = z.object({
+  preset: z.string().min(1),
+}) satisfies z.ZodType<Wire<ResponseValue<'session.setPermission'>>>

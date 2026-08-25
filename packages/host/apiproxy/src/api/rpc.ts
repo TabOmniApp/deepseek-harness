@@ -50,6 +50,10 @@ export interface RpcErrorDetailsMap {
   'agent-preset-conflict': { sessionId: SessionId; requestedPreset: string; existingPreset?: string }
   'agent-preset-not-found': { agentPreset: string; available: string[] }
   'agent-preset-invalid': { agentPreset: string; reason: string }
+  /** The deployment mounts no permission-presets service to switch. */
+  'permission-unavailable': { sessionId: SessionId }
+  /** The named permission preset is not one the deployment advertises. */
+  'permission-invalid': { sessionId: SessionId; preset: string; available: string[] }
   'agent-busy': { reason: string }
   'attachment-error': { reason: string }
   'queue-item-not-found': { itemId: MessageId }

@@ -2600,6 +2600,26 @@ function createFixtureWorld(options: FixtureOptions): FixtureWorld {
         }
         return ok(request, { accepted: true as const })
       },
+      setPermission: (request) => {
+        const { sessionId, preset } = request.payload
+        if (summaryOf(sessionId) === undefined) {
+          return err(request, { code: 'session-not-found', message: `no session ${sessionId}`, details: { sessionId } })
+        }
+        const spec = PERMISSION_PRESETS[preset]
+        if (spec === undefined) {
+          return err(request, {
+            code: 'permission-invalid',
+            message: `unknown permission preset "${preset}" (available: ${Object.keys(PERMISSION_PRESETS).join(', ')})`,
+            details: { sessionId, preset, available: Object.keys(PERMISSION_PRESETS) },
+          })
+        }
+        if (permissionSelectOf(logOf(sessionId)).currentValue !== preset) {
+          append(sessionId, { type: 'permission/preset', data: { preset } })
+          append(sessionId, { type: 'sandbox/mode', data: { mode: spec.sandbox } })
+          append(sessionId, { type: 'approval/policy', data: { policy: spec.approval } })
+        }
+        return ok(request, { preset })
+      },
     },
     subagents: {
       list: request => ok(request, { entries: [], parentAvailable: true }),
@@ -3187,6 +3207,7 @@ export class FixtureApiClient extends AbstractApiClient {
       case 'session.attachment': return this.api.sessions.attachment(request)
       case 'session.updateQueue': return this.api.sessions.updateQueue(request)
       case 'session.cancel': return this.api.sessions.cancel(request)
+      case 'session.setPermission': return this.api.sessions.setPermission(request)
       case 'subagent.list': return this.api.subagents.list(request)
       case 'subagent.history': return this.api.subagents.history(request)
       case 'subagent.prompt': return this.api.subagents.prompt(request, signal)
