@@ -374,4 +374,13 @@ export interface SessionsApi {
    */
   cancel(request: RpcRequest<{ sessionId: SessionId }>): Promise<RpcResponse<{ accepted: true }>>
 
+  /**
+   * Switches the session's permission preset — its sandbox mode and approval
+   * policy — without sending anything to the model. The preset must be one the
+   * deployment advertises; picking the preset a session is already on appends
+   * nothing. Session-backed subagents reject with `agent-busy`.
+   */
+  setPermission(request: RpcRequest<{ sessionId: SessionId; preset: string }>):
+  Promise<RpcResponse<{ preset: string }>>
+
 }

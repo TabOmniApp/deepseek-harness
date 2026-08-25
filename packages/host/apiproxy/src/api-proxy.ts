@@ -2531,6 +2531,35 @@ export function createApiProxy(ctx: Context, defaults: ApiProxyDefaults): ApiPro
         agent.cancel({ kind: 'user' }, { keepInbox: true })
         return Promise.resolve(ok(request, { accepted: true as const }))
       },
+
+      async setPermission(request) {
+        const { sessionId, preset } = request.payload
+        const found = await agentFor(sessionId)
+        if ('error' in found) return err(request, found.error)
+        // The permission-presets seam is optional composition, read through
+        // `ctx.get` (no value dependency); its `names`/`set` shape is the one
+        // stable surface this boundary needs.
+        const presets = ctx.get('permissionPresets') as
+          | { names: readonly string[]; set(session: Session, name: string): void }
+          | undefined
+        if (presets === undefined) {
+          return err(request, {
+            code: 'permission-unavailable',
+            message: 'this deployment mounts no permission-presets service',
+            details: { sessionId },
+          })
+        }
+        if (!presets.names.includes(preset)) {
+          return err(request, {
+            code: 'permission-invalid',
+            message: `unknown permission preset "${preset}" (available: ${presets.names.join(', ')})`,
+            details: { sessionId, preset, available: [...presets.names] },
+          })
+        }
+        // Idempotent: picking the preset a session is already on appends nothing.
+        presets.set(found.agent.session, preset)
+        return ok(request, { preset })
+      },
     },
 
     subagents: {
